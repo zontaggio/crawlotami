@@ -90,8 +90,19 @@ async function checkAvailability(page) {
 
 // --- Main ---
 async function main() {
-  let browser = await chromium.launch({ headless: true });
-  let context = await browser.newContext();
+  const BROWSER_OPTS = {
+    headless: true,
+    args: ['--disable-blink-features=AutomationControlled', '--no-sandbox'],
+  };
+  const CONTEXT_OPTS = {
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    viewport: { width: 1280, height: 720 },
+    locale: 'pt-BR',
+    timezoneId: 'America/Sao_Paulo',
+  };
+
+  let browser = await chromium.launch(BROWSER_OPTS);
+  let context = await browser.newContext(CONTEXT_OPTS);
   let page = await context.newPage();
 
   let consecutiveErrors = 0;
@@ -145,7 +156,7 @@ async function main() {
         consecutiveErrors = 0;
 
         try { await context.close(); } catch (_) {}
-        context = await browser.newContext();
+        context = await browser.newContext(CONTEXT_OPTS);
         page = await context.newPage();
       }
     }
