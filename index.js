@@ -11,7 +11,7 @@ const {
   PRENOTAMI_PASSWORD,
   TELEGRAM_BOT_TOKEN,
   TELEGRAM_CHAT_ID,
-  CHECK_INTERVAL_MS = '300000',
+  CHECK_INTERVAL_MS = '600000',
 } = process.env;
 
 const REQUIRED = { PRENOTAMI_EMAIL, PRENOTAMI_PASSWORD, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID };
@@ -23,7 +23,7 @@ for (const [key, val] of Object.entries(REQUIRED)) {
 }
 
 const INTERVAL = Number(CHECK_INTERVAL_MS);
-const HEARTBEAT_EVERY = 12; // every 6 checks (~1h with 10min interval)
+const HEARTBEAT_EVERY = 6; // every 6 checks (~1h with 10min interval)
 const NO_SLOTS_MESSAGES = [
   'Stante l\'elevata richiesta i posti disponibili per il servizio scelto sono esauriti',
   'All appointments for this service are currently booked',
