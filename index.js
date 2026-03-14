@@ -49,3 +49,30 @@ async function login(page) {
   await page.waitForURL('**/UserArea**', { timeout: 30000 });
   console.log(`[${timestamp()}] Login OK`);
 }
+
+// --- Availability check ---
+async function checkAvailability(page) {
+  await page.goto('https://prenotami.esteri.it/Services', { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+  await page.waitForSelector('#advanced', { timeout: 15000 });
+  await page.click('#advanced');
+  await page.waitForTimeout(3000);
+
+  // Click the first service in the table (passport)
+  const firstServiceLink = page.locator('#dataTableServices tbody tr:first-child td:last-child a');
+  if (await firstServiceLink.count() > 0) {
+    await firstServiceLink.click();
+  } else {
+    await page.click('#dataTableServices tbody tr:first-child a');
+  }
+
+  await page.waitForTimeout(3000);
+
+  const bodyText = await page.textContent('body');
+
+  if (bodyText.includes(NO_SLOTS_TEXT) || bodyText.includes('esauriti')) {
+    return false;
+  }
+
+  return true;
+}
