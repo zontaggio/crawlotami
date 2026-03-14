@@ -43,36 +43,41 @@ async function notify(msg) {
 }
 
 function timestamp() {
-  return new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+function randomDelay(min, max) {
+  return new Promise((r) => setTimeout(r, min + Math.random() * (max - min)));
+}  return new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 }
 
 // --- Login ---
 async function login(page) {
   console.log(`[${timestamp()}] Logging in...`);
   await page.goto('https://prenotami.esteri.it/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await randomDelay(2000, 4000);
 
   const loginButton = page.locator('text=Effettuare il Login per accedere al portale');
   if (await loginButton.count() > 0) {
     await loginButton.click();
-  }
+    await randomDelay(2000, 3000);  }
 
   await page.waitForURL('**/iam.esteri.it/**', { timeout: 15000 });
   await page.waitForSelector('#floatingLabelInput33', { timeout: 15000 });
-
+  await randomDelay(1000, 2000);
   await page.fill('#floatingLabelInput33', PRENOTAMI_EMAIL);
-  await page.fill('#floatingLabelInput38', PRENOTAMI_PASSWORD);
-  await page.click('button[type="submit"]');
+  await randomDelay(500, 1500);  await page.fill('#floatingLabelInput38', PRENOTAMI_PASSWORD);
+  await randomDelay(500, 1000);  await page.click('button[type="submit"]');
   await page.waitForURL('**/prenotami.esteri.it/**', { timeout: 30000 });
-  console.log(`[${timestamp()}] Login OK`);
+  await randomDelay(2000, 4000);  console.log(`[${timestamp()}] Login OK`);
 }
 
 // --- Availability check ---
 async function checkAvailability(page) {
   await page.goto('https://prenotami.esteri.it/Services', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await randomDelay(2000, 4000);
 
   await page.waitForSelector('#advanced', { timeout: 15000 });
   await page.click('#advanced');
-  await page.waitForTimeout(3000);
+  await randomDelay(2000, 4000);
 
   const firstServiceLink = page.locator('#dataTableServices tbody tr:first-child td:last-child a');
   if (await firstServiceLink.count() > 0) {
@@ -81,7 +86,7 @@ async function checkAvailability(page) {
     await page.click('#dataTableServices tbody tr:first-child a');
   }
 
-  await page.waitForTimeout(3000);
+  await randomDelay(2000, 4000);
 
   const bodyText = await page.textContent('body');
   const noSlots = NO_SLOTS_MESSAGES.some((msg) => bodyText.includes(msg));
