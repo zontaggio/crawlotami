@@ -76,3 +76,45 @@ async function checkAvailability(page) {
 
   return true;
 }
+
+// --- Main ---
+async function main() {
+  let browser = await chromium.launch({ headless: true });
+  let context = await browser.newContext();
+  let page = await context.newPage();
+
+  let loggedIn = false;
+  let checkCount = 0;
+
+  await notify(`Bot started! Monitoring Prenotami every ${INTERVAL / 60000} min...`);
+
+  while (true) {
+    try {
+      if (!loggedIn) {
+        await login(page);
+        loggedIn = true;
+      }
+
+      const available = await checkAvailability(page);
+      checkCount++;
+
+      if (available) {
+        const msg = `SLOT AVAILABLE! Book NOW: https://prenotami.esteri.it/Services`;
+        console.log(`[${timestamp()}] ${msg}`);
+        await notify(msg);
+      } else {
+        console.log(`[${timestamp()}] Check #${checkCount} - No slots available.`);
+      }
+    } catch (err) {
+      console.error(`[${timestamp()}] Error: ${err.message}`);
+    }
+
+    await new Promise((r) => setTimeout(r, INTERVAL));
+  }
+}
+
+main().catch(async (err) => {
+  console.error('Fatal error:', err);
+  await notify(`Bot crashed: ${err.message}`);
+  process.exit(1);
+});
