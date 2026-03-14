@@ -43,11 +43,20 @@ async function login(page) {
   console.log(`[${timestamp()}] Logging in...`);
   await page.goto('https://prenotami.esteri.it/', { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-  await page.waitForSelector('#login-email', { timeout: 15000 });
-  await page.fill('#login-email', PRENOTAMI_EMAIL);
-  await page.fill('#login-password', PRENOTAMI_PASSWORD);
-  await page.press('#login-password', 'Enter');
-  await page.waitForURL('**/UserArea**', { timeout: 30000 });
+  // Click "Effettuare il Login per accedere al portale" button
+  const loginButton = page.locator('text=Effettuare il Login per accedere al portale');
+  if (await loginButton.count() > 0) {
+    await loginButton.click();
+  }
+
+  // Wait for redirect to SSO (iam.esteri.it)
+  await page.waitForURL('**/iam.esteri.it/**', { timeout: 15000 });
+  await page.waitForSelector('#floatingLabelInput33', { timeout: 15000 });
+
+  await page.fill('#floatingLabelInput33', PRENOTAMI_EMAIL);
+  await page.fill('#floatingLabelInput38', PRENOTAMI_PASSWORD);
+  await page.click('button[type="submit"]');
+  await page.waitForURL('**/prenotami.esteri.it/**', { timeout: 30000 });
   console.log(`[${timestamp()}] Login OK`);
 }
 
@@ -89,7 +98,6 @@ async function main() {
 
   await notify(`Bot started! Monitoring Prenotami every ${INTERVAL / 60000} min...`);
 
-  // Graceful shutdown
   const shutdown = async () => {
     console.log('\nShutting down...');
     await notify('Bot stopped.');
