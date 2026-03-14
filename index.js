@@ -1,5 +1,8 @@
 require('dotenv').config();
-const { chromium } = require('playwright');
+const { chromium } = require('playwright-extra');
+const stealth = require('puppeteer-extra-plugin-stealth');
+
+chromium.use(stealth());
 const TelegramBot = require('node-telegram-bot-api');
 
 // --- Config ---
