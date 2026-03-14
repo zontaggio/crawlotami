@@ -20,7 +20,7 @@ for (const [key, val] of Object.entries(REQUIRED)) {
 }
 
 const INTERVAL = Number(CHECK_INTERVAL_MS);
-const HEARTBEAT_EVERY = 12; // every 12 checks (~1h with 5min interval)
+const HEARTBEAT_EVERY = 12;
 const NO_SLOTS_TEXT = 'Stante l\'elevata richiesta i posti disponibili per il servizio scelto sono esauriti';
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
@@ -59,7 +59,6 @@ async function checkAvailability(page) {
   await page.click('#advanced');
   await page.waitForTimeout(3000);
 
-  // Click the first service in the table (passport)
   const firstServiceLink = page.locator('#dataTableServices tbody tr:first-child td:last-child a');
   if (await firstServiceLink.count() > 0) {
     await firstServiceLink.click();
@@ -84,8 +83,9 @@ async function main() {
   let context = await browser.newContext();
   let page = await context.newPage();
 
-  let loggedIn = false;
+  let consecutiveErrors = 0;
   let checkCount = 0;
+  let loggedIn = false;
 
   await notify(`Bot started! Monitoring Prenotami every ${INTERVAL / 60000} min...`);
 
@@ -94,6 +94,7 @@ async function main() {
       if (!loggedIn) {
         await login(page);
         loggedIn = true;
+        consecutiveErrors = 0;
       }
 
       const available = await checkAvailability(page);
@@ -108,11 +109,25 @@ async function main() {
         console.log(`[${timestamp()}] Check #${checkCount} - No slots available.`);
       }
 
+      consecutiveErrors = 0;
+
       if (checkCount % HEARTBEAT_EVERY === 0) {
         await notify(`Heartbeat: ${checkCount} checks completed. No slots so far. (${timestamp()})`);
       }
     } catch (err) {
-      console.error(`[${timestamp()}] Error: ${err.message}`);
+      consecutiveErrors++;
+      console.error(`[${timestamp()}] Error (#${consecutiveErrors}): ${err.message}`);
+
+      if (consecutiveErrors >= 3) {
+        console.log(`[${timestamp()}] Re-authenticating after ${consecutiveErrors} errors...`);
+        await notify(`Re-authenticating after ${consecutiveErrors} consecutive errors.`);
+        loggedIn = false;
+        consecutiveErrors = 0;
+
+        try { await context.close(); } catch (_) {}
+        context = await browser.newContext();
+        page = await context.newPage();
+      }
     }
 
     await new Promise((r) => setTimeout(r, INTERVAL));
