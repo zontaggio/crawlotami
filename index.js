@@ -21,7 +21,12 @@ for (const [key, val] of Object.entries(REQUIRED)) {
 
 const INTERVAL = Number(CHECK_INTERVAL_MS);
 const HEARTBEAT_EVERY = 12;
-const NO_SLOTS_TEXT = 'Stante l\'elevata richiesta i posti disponibili per il servizio scelto sono esauriti';
+const NO_SLOTS_MESSAGES = [
+  'Stante l\'elevata richiesta i posti disponibili per il servizio scelto sono esauriti',
+  'All appointments for this service are currently booked',
+  'esauriti',
+  'currently booked',
+];
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
 
@@ -43,11 +48,18 @@ async function login(page) {
   console.log(`[${timestamp()}] Logging in...`);
   await page.goto('https://prenotami.esteri.it/', { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-  await page.waitForSelector('#login-email', { timeout: 15000 });
-  await page.fill('#login-email', PRENOTAMI_EMAIL);
-  await page.fill('#login-password', PRENOTAMI_PASSWORD);
-  await page.press('#login-password', 'Enter');
-  await page.waitForURL('**/UserArea**', { timeout: 30000 });
+  const loginButton = page.locator('text=Effettuare il Login per accedere al portale');
+  if (await loginButton.count() > 0) {
+    await loginButton.click();
+  }
+
+  await page.waitForURL('**/iam.esteri.it/**', { timeout: 15000 });
+  await page.waitForSelector('#floatingLabelInput33', { timeout: 15000 });
+
+  await page.fill('#floatingLabelInput33', PRENOTAMI_EMAIL);
+  await page.fill('#floatingLabelInput38', PRENOTAMI_PASSWORD);
+  await page.click('button[type="submit"]');
+  await page.waitForURL('**/prenotami.esteri.it/**', { timeout: 30000 });
   console.log(`[${timestamp()}] Login OK`);
 }
 
@@ -69,12 +81,8 @@ async function checkAvailability(page) {
   await page.waitForTimeout(3000);
 
   const bodyText = await page.textContent('body');
-
-  if (bodyText.includes(NO_SLOTS_TEXT) || bodyText.includes('esauriti')) {
-    return false;
-  }
-
-  return true;
+  const noSlots = NO_SLOTS_MESSAGES.some((msg) => bodyText.includes(msg));
+  return !noSlots;
 }
 
 // --- Main ---
@@ -89,7 +97,6 @@ async function main() {
 
   await notify(`Bot started! Monitoring Prenotami every ${INTERVAL / 60000} min...`);
 
-  // Graceful shutdown
   const shutdown = async () => {
     console.log('\nShutting down...');
     await notify('Bot stopped.');
