@@ -21,7 +21,12 @@ for (const [key, val] of Object.entries(REQUIRED)) {
 
 const INTERVAL = Number(CHECK_INTERVAL_MS);
 const HEARTBEAT_EVERY = 12;
-const NO_SLOTS_TEXT = 'Stante l\'elevata richiesta i posti disponibili per il servizio scelto sono esauriti';
+const NO_SLOTS_MESSAGES = [
+  'Stante l\'elevata richiesta i posti disponibili per il servizio scelto sono esauriti',
+  'All appointments for this service are currently booked',
+  'esauriti',
+  'currently booked',
+];
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
 
@@ -43,13 +48,11 @@ async function login(page) {
   console.log(`[${timestamp()}] Logging in...`);
   await page.goto('https://prenotami.esteri.it/', { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-  // Click "Effettuare il Login per accedere al portale" button
   const loginButton = page.locator('text=Effettuare il Login per accedere al portale');
   if (await loginButton.count() > 0) {
     await loginButton.click();
   }
 
-  // Wait for redirect to SSO (iam.esteri.it)
   await page.waitForURL('**/iam.esteri.it/**', { timeout: 15000 });
   await page.waitForSelector('#floatingLabelInput33', { timeout: 15000 });
 
@@ -78,12 +81,8 @@ async function checkAvailability(page) {
   await page.waitForTimeout(3000);
 
   const bodyText = await page.textContent('body');
-
-  if (bodyText.includes(NO_SLOTS_TEXT) || bodyText.includes('esauriti')) {
-    return false;
-  }
-
-  return true;
+  const noSlots = NO_SLOTS_MESSAGES.some((msg) => bodyText.includes(msg));
+  return !noSlots;
 }
 
 // --- Main ---
