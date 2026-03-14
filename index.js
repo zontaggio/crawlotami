@@ -20,6 +20,7 @@ for (const [key, val] of Object.entries(REQUIRED)) {
 }
 
 const INTERVAL = Number(CHECK_INTERVAL_MS);
+const HEARTBEAT_EVERY = 12; // every 12 checks (~1h with 5min interval)
 const NO_SLOTS_TEXT = 'Stante l\'elevata richiesta i posti disponibili per il servizio scelto sono esauriti';
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
@@ -102,8 +103,13 @@ async function main() {
         const msg = `SLOT AVAILABLE! Book NOW: https://prenotami.esteri.it/Services`;
         console.log(`[${timestamp()}] ${msg}`);
         await notify(msg);
+        await notify(msg);
       } else {
         console.log(`[${timestamp()}] Check #${checkCount} - No slots available.`);
+      }
+
+      if (checkCount % HEARTBEAT_EVERY === 0) {
+        await notify(`Heartbeat: ${checkCount} checks completed. No slots so far. (${timestamp()})`);
       }
     } catch (err) {
       console.error(`[${timestamp()}] Error: ${err.message}`);
