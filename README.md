@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/crawlotami.png" alt="crawlotami" width="600" />
+</p>
+
 # crawlotami
 
 Checks [Prenotami](https://prenotami.esteri.it/) for available Italian consulate appointment slots every ~10 minutes and sends you a Telegram message when one opens up.
