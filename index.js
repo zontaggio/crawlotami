@@ -84,7 +84,10 @@ async function login(page) {
   await page.fill('#floatingLabelInput38', PRENOTAMI_PASSWORD);
   await randomDelay(500, 1000);
   await page.click('button[type="submit"]');
-  await page.waitForURL('**/prenotami.esteri.it/**', { timeout: 30000 });
+
+  // After SSO, Radware Bot Manager (validate.perfdrive.com) may run a JS challenge
+  // before redirecting back to prenotami. Give it enough time to complete.
+  await page.waitForURL('**/prenotami.esteri.it/**', { timeout: 120000 });
   await randomDelay(2000, 4000);
   console.log(`[${timestamp()}] Login OK`);
 }
