@@ -89,6 +89,16 @@ async function main() {
 
   await notify(`Bot started! Monitoring Prenotami every ${INTERVAL / 60000} min...`);
 
+  // Graceful shutdown
+  const shutdown = async () => {
+    console.log('\nShutting down...');
+    await notify('Bot stopped.');
+    await browser.close().catch(() => {});
+    process.exit(0);
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+
   while (true) {
     try {
       if (!loggedIn) {
