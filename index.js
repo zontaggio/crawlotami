@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { chromium } = require('playwright');
+const TelegramBot = require('node-telegram-bot-api');
 
 // --- Config ---
 const {
@@ -19,3 +20,18 @@ for (const [key, val] of Object.entries(REQUIRED)) {
 }
 
 const INTERVAL = Number(CHECK_INTERVAL_MS);
+
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
+
+// --- Helpers ---
+async function notify(msg) {
+  try {
+    await bot.sendMessage(TELEGRAM_CHAT_ID, msg);
+  } catch (err) {
+    console.error('Telegram send error:', err.message);
+  }
+}
+
+function timestamp() {
+  return new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+}
