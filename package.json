@@ -1,6 +1,6 @@
 {
   "name": "crawlotami",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Watches Prenotami for Italian consulate appointment slots and alerts you on Telegram.",
   "license": "MIT",
   "type": "module",
