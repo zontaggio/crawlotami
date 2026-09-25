@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { ConfigError, loadConfig } from './config.js';
 import { configureLog, log } from './log.js';
 import { DEFAULT_OPTIONS, runMonitor } from './monitor.js';
@@ -7,6 +6,12 @@ import { PrenotamiSession } from './prenotami/session.js';
 import { createTelegramNotifier } from './telegram.js';
 
 async function main(): Promise<void> {
+  try {
+    process.loadEnvFile();
+  } catch {
+    // No .env file: use the real environment (e.g. variables passed to Docker).
+  }
+
   let config;
   try {
     config = loadConfig();
