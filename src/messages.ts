@@ -6,7 +6,7 @@ export function escapeHTML(text: string): string {
 
 export const messages = {
   started: (intervalMinutes: number) =>
-    `🕷️ <b>crawlotami is watching Prenotami</b>\nChecking every ${intervalMinutes} min. You'll hear from me when slots open.`,
+    `👀 <b>crawlotami is watching Prenotami</b>\nChecking every ${intervalMinutes} min. You'll hear from me when slots open.`,
 
   slotsOpen: (url: string) => `🟢 <b>Slots available!</b>\nBook now, before they're gone:\n${url}`,
 
