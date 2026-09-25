@@ -40,6 +40,7 @@ export async function runMonitor(
   let loggedIn = false;
   let consecutiveErrors = 0;
   let checkCount = 0;
+  let slotsOpen = false;
 
   while (!signal.aborted) {
     try {
@@ -52,19 +53,24 @@ export async function runMonitor(
       const available = await checker.hasAvailableSlots();
       checkCount++;
 
-      if (available) {
+      // Alert when slots open and when they're gone, not on every check in between.
+      if (available && !slotsOpen) {
         const message = `SLOT AVAILABLE! Book NOW: ${SERVICES_URL}`;
         log(message);
         await notify(message);
-        await notify(message);
+      } else if (!available && slotsOpen) {
+        log('Slots are gone again.');
+        await notify('The open slots are gone again. Still watching.');
       } else {
-        log(`Check #${checkCount} - No slots available.`);
+        log(`Check #${checkCount} - ${available ? 'Slots still open.' : 'No slots available.'}`);
       }
+      slotsOpen = available;
 
       consecutiveErrors = 0;
 
       if (checkCount % options.heartbeatEvery === 0) {
-        await notify(`Heartbeat: ${checkCount} checks completed. No slots so far. (${timestamp()})`);
+        const status = slotsOpen ? 'Slots are open right now!' : 'No slots so far.';
+        await notify(`Heartbeat: ${checkCount} checks completed. ${status} (${timestamp()})`);
       }
     } catch (error) {
       consecutiveErrors++;

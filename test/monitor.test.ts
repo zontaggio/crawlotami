@@ -57,9 +57,10 @@ describe('runMonitor', () => {
     expect(sleeps).toEqual([600_000, 600_000]);
   });
 
-  it('alerts when a slot opens', async () => {
-    const { messages } = await run([true]);
-    expect(messages.some((m) => m.includes('SLOT AVAILABLE'))).toBe(true);
+  it('alerts once when slots open, then once when they are gone', async () => {
+    const { messages } = await run([false, true, true, false]);
+    expect(messages.filter((m) => m.includes('SLOT AVAILABLE'))).toHaveLength(1);
+    expect(messages.filter((m) => m.includes('gone again'))).toHaveLength(1);
   });
 
   it('sends a heartbeat every few checks', async () => {
