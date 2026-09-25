@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # --- Build: compile TypeScript and keep only production dependencies ---------
-FROM node:22-bookworm-slim AS build
+FROM node:26-bookworm-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 # Skip the postinstall browser download; the runtime stage installs Chromium.
@@ -11,7 +11,7 @@ COPY src ./src
 RUN npm run build && npm prune --omit=dev
 
 # --- Runtime: Node plus Chromium and its system libraries, nothing else ------
-FROM node:22-bookworm-slim
+FROM node:26-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
