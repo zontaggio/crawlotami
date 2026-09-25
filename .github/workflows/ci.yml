@@ -40,3 +40,21 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t crawlotami .
+
+      # Without credentials the bot must stop with a clear message, not crash.
+      - name: Smoke test
+        run: |
+          set +e
+          output=$(docker run --rm crawlotami 2>&1)
+          status=$?
+          echo "$output"
+          test $status -eq 1 && echo "$output" | grep -q "Missing PRENOTAMI_EMAIL"

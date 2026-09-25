@@ -1,0 +1,9 @@
+services:
+  crawlotami:
+    build: .
+    image: crawlotami
+    env_file: .env
+    restart: unless-stopped
+    init: true
+    # Chromium needs more shared memory than Docker's 64 MB default.
+    shm_size: 1gb
