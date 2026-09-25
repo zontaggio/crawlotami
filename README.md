@@ -17,13 +17,13 @@ cp .env.example .env
 
 Fill in `.env`:
 
-| Variable | What it is |
-|---|---|
-| `PRENOTAMI_EMAIL` | Your Prenotami login email |
-| `PRENOTAMI_PASSWORD` | Your Prenotami password |
+| Variable             | What it is                                                             |
+| -------------------- | ---------------------------------------------------------------------- |
+| `PRENOTAMI_EMAIL`    | Your Prenotami login email                                             |
+| `PRENOTAMI_PASSWORD` | Your Prenotami password                                                |
 | `TELEGRAM_BOT_TOKEN` | Create a bot with [@BotFather](https://t.me/BotFather), copy the token |
-| `TELEGRAM_CHAT_ID` | Message [@userinfobot](https://t.me/userinfobot) to get your chat ID |
-| `CHECK_INTERVAL_MS` | Check interval in ms (default: `600000` = 10 min) |
+| `TELEGRAM_CHAT_ID`   | Message [@userinfobot](https://t.me/userinfobot) to get your chat ID   |
+| `CHECK_INTERVAL_MS`  | Check interval in ms (default: `600000` = 10 min)                      |
 
 Send `/start` to your bot on Telegram before running. Otherwise it can't message you.
 

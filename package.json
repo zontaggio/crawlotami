@@ -13,7 +13,10 @@
     "start": "node dist/index.js",
     "typecheck": "tsc",
     "test": "vitest run",
-    "postinstall": "playwright install chromium"
+    "postinstall": "playwright install chromium",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "dotenv": "^16.4.7",
@@ -23,9 +26,13 @@
     "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.20.4",
     "@types/node-telegram-bot-api": "^0.64.0",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.9",
     "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1",
     "vitest": "^5.0.2"
   }
 }

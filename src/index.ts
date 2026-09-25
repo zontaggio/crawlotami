@@ -29,8 +29,8 @@ async function main(): Promise<void> {
     await browser.close().catch(() => {});
     process.exit(0);
   };
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', () => void shutdown());
+  process.on('SIGTERM', () => void shutdown());
 
   await notify(`Bot started! Monitoring Prenotami every ${config.checkIntervalMs / 60_000} min...`);
 

@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": [
-      "ES2023"
-    ],
+    "lib": ["ES2023"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
@@ -11,14 +9,8 @@
     "noImplicitOverride": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "noEmit": true
   },
-  "include": [
-    "src",
-    "test",
-    "vitest.config.ts"
-  ]
+  "include": ["src", "test", "vitest.config.ts"]
 }
