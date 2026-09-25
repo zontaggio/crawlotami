@@ -25,8 +25,7 @@ export interface MonitorDependencies {
   random: () => number;
 }
 
-export const DEFAULT_OPTIONS: Omit<MonitorOptions, 'intervalMs'> = {
-  heartbeatEvery: 6, // ~1 h with a 10 min interval
+export const DEFAULT_OPTIONS: Omit<MonitorOptions, 'intervalMs' | 'heartbeatEvery'> = {
   maxConsecutiveErrors: 3,
   captchaPauseMs: 30 * 60 * 1000,
 };
@@ -76,8 +75,11 @@ export async function runMonitor(
       consecutiveErrors++;
 
       if (error instanceof CaptchaError) {
-        logError('CAPTCHA detected! Waiting 30min before retrying...');
-        await notify('CAPTCHA detected! Bot paused for 30min. If it persists, set headless: false to solve manually.');
+        const minutes = Math.round(options.captchaPauseMs / 60_000);
+        logError(`CAPTCHA detected! Waiting ${minutes} min before retrying...`);
+        await notify(
+          `CAPTCHA detected! Paused for ${minutes} min. If it keeps happening, check less often or run with HEADLESS=false to solve it yourself.`,
+        );
         loggedIn = false;
         await checker.reset();
         await sleep(options.captchaPauseMs);

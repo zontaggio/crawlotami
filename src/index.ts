@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { ConfigError, loadConfig } from './config.js';
+import { configureLog, log } from './log.js';
 import { DEFAULT_OPTIONS, runMonitor } from './monitor.js';
 import { launchBrowser } from './prenotami/browser.js';
 import { PrenotamiSession } from './prenotami/session.js';
@@ -17,9 +18,14 @@ async function main(): Promise<void> {
     throw error;
   }
 
+  configureLog(config.browser);
+  config.warnings.forEach((warning) => {
+    log(warning);
+  });
+
   const notify = createTelegramNotifier(config.telegram.botToken, config.telegram.chatId);
-  const browser = await launchBrowser();
-  const session = new PrenotamiSession(browser, config.prenotami);
+  const browser = await launchBrowser(config.browser);
+  const session = new PrenotamiSession(browser, config.browser, config.prenotami);
   const stop = new AbortController();
 
   const shutdown = async () => {
@@ -42,7 +48,11 @@ async function main(): Promise<void> {
         sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
         random: Math.random,
       },
-      { ...DEFAULT_OPTIONS, intervalMs: config.checkIntervalMs },
+      {
+        ...DEFAULT_OPTIONS,
+        intervalMs: config.checkIntervalMs,
+        heartbeatEvery: Math.max(1, Math.round(config.heartbeatIntervalMs / config.checkIntervalMs)),
+      },
       stop.signal,
     );
   } catch (error) {

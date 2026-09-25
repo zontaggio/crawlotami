@@ -1,6 +1,6 @@
 import type { Browser, BrowserContext, Page } from 'playwright';
 import { log } from '../log.js';
-import { CONTEXT_OPTIONS } from './browser.js';
+import { contextOptions, type BrowserSettings } from './browser.js';
 import { hasNoSlots, isCaptchaPage } from './pageState.js';
 
 const PORTAL_URL = 'https://prenotami.esteri.it/';
@@ -22,7 +22,8 @@ export class PrenotamiSession {
 
   constructor(
     private readonly browser: Browser,
-    private readonly credentials: { email: string; password: string },
+    private readonly settings: BrowserSettings,
+    private readonly account: { email: string; password: string; serviceRow: number },
   ) {}
 
   async login(): Promise<void> {
@@ -44,9 +45,9 @@ export class PrenotamiSession {
     await page.waitForSelector('#floatingLabelInput33', { timeout: 15_000 });
     await randomDelay(1000, 2000);
 
-    await page.fill('#floatingLabelInput33', this.credentials.email);
+    await page.fill('#floatingLabelInput33', this.account.email);
     await randomDelay(500, 1500);
-    await page.fill('#floatingLabelInput38', this.credentials.password);
+    await page.fill('#floatingLabelInput38', this.account.password);
     await randomDelay(500, 1000);
     await page.click('button[type="submit"]');
 
@@ -57,7 +58,7 @@ export class PrenotamiSession {
     log('Login OK');
   }
 
-  /** Opens the first service (passport) and reports whether it has open slots. */
+  /** Opens the configured service (the first row, passports, by default) and reports whether it has open slots. */
   async hasAvailableSlots(): Promise<boolean> {
     const page = await this.currentPage();
     await page.goto(SERVICES_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
@@ -68,11 +69,12 @@ export class PrenotamiSession {
     await page.click('#advanced');
     await randomDelay(2000, 4000);
 
-    const firstServiceLink = page.locator('#dataTableServices tbody tr:first-child td:last-child a');
-    if ((await firstServiceLink.count()) > 0) {
-      await firstServiceLink.click();
+    const row = `#dataTableServices tbody tr:nth-child(${this.account.serviceRow})`;
+    const bookLink = page.locator(`${row} td:last-child a`);
+    if ((await bookLink.count()) > 0) {
+      await bookLink.click();
     } else {
-      await page.click('#dataTableServices tbody tr:first-child a');
+      await page.click(`${row} a`);
     }
     await randomDelay(3000, 5000);
 
@@ -90,7 +92,7 @@ export class PrenotamiSession {
 
   private async currentPage(): Promise<Page> {
     if (!this.page) {
-      this.context = await this.browser.newContext(CONTEXT_OPTIONS);
+      this.context = await this.browser.newContext(contextOptions(this.settings));
       this.page = await this.context.newPage();
     }
     return this.page;

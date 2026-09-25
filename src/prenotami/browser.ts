@@ -4,19 +4,25 @@ import type { Browser, BrowserContextOptions, LaunchOptions } from 'playwright';
 
 chromium.use(stealth());
 
-const LAUNCH_OPTIONS: LaunchOptions = {
-  headless: true,
-  args: ['--disable-blink-features=AutomationControlled', '--no-sandbox'],
-};
+export interface BrowserSettings {
+  headless: boolean;
+  timeZone: string;
+  locale: string;
+}
 
-export const CONTEXT_OPTIONS: BrowserContextOptions = {
-  userAgent:
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-  viewport: { width: 1280, height: 720 },
-  locale: 'pt-BR',
-  timezoneId: 'America/Sao_Paulo',
-};
+export function launchBrowser({ headless }: BrowserSettings): Promise<Browser> {
+  return chromium.launch({
+    headless,
+    args: ['--disable-blink-features=AutomationControlled', '--no-sandbox'],
+  } satisfies LaunchOptions);
+}
 
-export function launchBrowser(): Promise<Browser> {
-  return chromium.launch(LAUNCH_OPTIONS);
+export function contextOptions({ timeZone, locale }: BrowserSettings): BrowserContextOptions {
+  return {
+    userAgent:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    viewport: { width: 1280, height: 720 },
+    locale,
+    timezoneId: timeZone,
+  };
 }
