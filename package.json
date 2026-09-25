@@ -1,11 +1,19 @@
 {
   "name": "crawlotami",
   "version": "1.0.0",
-  "description": "Telegram bot that monitors Prenotami for available Italian consulate appointment slots",
-  "main": "index.js",
+  "description": "Watches Prenotami for Italian consulate appointment slots and alerts you on Telegram.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "npx playwright install chromium"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "playwright install chromium"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
@@ -13,5 +21,10 @@
     "playwright": "^1.50.0",
     "playwright-extra": "^4.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "@types/node-telegram-bot-api": "^0.64.0",
+    "typescript": "~6.0.3"
   }
 }

@@ -1,0 +1,96 @@
+import { log, logError, timestamp } from './log.js';
+import { CaptchaError, SERVICES_URL } from './prenotami/session.js';
+import type { Notify } from './telegram.js';
+
+/** What the monitor needs from a Prenotami session; faked in tests. */
+export interface SlotChecker {
+  login(): Promise<void>;
+  hasAvailableSlots(): Promise<boolean>;
+  reset(): Promise<void>;
+}
+
+export interface MonitorOptions {
+  intervalMs: number;
+  /** Send a heartbeat every this many checks. */
+  heartbeatEvery: number;
+  /** Log in again after this many errors in a row. */
+  maxConsecutiveErrors: number;
+  captchaPauseMs: number;
+}
+
+export interface MonitorDependencies {
+  checker: SlotChecker;
+  notify: Notify;
+  sleep: (ms: number) => Promise<void>;
+  random: () => number;
+}
+
+export const DEFAULT_OPTIONS: Omit<MonitorOptions, 'intervalMs'> = {
+  heartbeatEvery: 6, // ~1 h with a 10 min interval
+  maxConsecutiveErrors: 3,
+  captchaPauseMs: 30 * 60 * 1000,
+};
+
+/** Checks for slots until `signal` is aborted. */
+export async function runMonitor(
+  { checker, notify, sleep, random }: MonitorDependencies,
+  options: MonitorOptions,
+  signal: AbortSignal,
+): Promise<void> {
+  let loggedIn = false;
+  let consecutiveErrors = 0;
+  let checkCount = 0;
+
+  while (!signal.aborted) {
+    try {
+      if (!loggedIn) {
+        await checker.login();
+        loggedIn = true;
+        consecutiveErrors = 0;
+      }
+
+      const available = await checker.hasAvailableSlots();
+      checkCount++;
+
+      if (available) {
+        const message = `SLOT AVAILABLE! Book NOW: ${SERVICES_URL}`;
+        log(message);
+        await notify(message);
+        await notify(message);
+      } else {
+        log(`Check #${checkCount} - No slots available.`);
+      }
+
+      consecutiveErrors = 0;
+
+      if (checkCount % options.heartbeatEvery === 0) {
+        await notify(`Heartbeat: ${checkCount} checks completed. No slots so far. (${timestamp()})`);
+      }
+    } catch (error) {
+      consecutiveErrors++;
+
+      if (error instanceof CaptchaError) {
+        logError('CAPTCHA detected! Waiting 30min before retrying...');
+        await notify('CAPTCHA detected! Bot paused for 30min. If it persists, set headless: false to solve manually.');
+        loggedIn = false;
+        await checker.reset();
+        await sleep(options.captchaPauseMs);
+        consecutiveErrors = 0;
+        continue;
+      }
+
+      logError(`Error (#${consecutiveErrors}): ${(error as Error).message}`);
+
+      if (consecutiveErrors >= options.maxConsecutiveErrors) {
+        log(`Re-authenticating after ${consecutiveErrors} errors...`);
+        await notify(`Re-authenticating after ${consecutiveErrors} consecutive errors.`);
+        loggedIn = false;
+        consecutiveErrors = 0;
+        await checker.reset();
+      }
+    }
+
+    // Random interval jitter of ±20%.
+    await sleep(options.intervalMs * (0.8 + random() * 0.4));
+  }
+}
