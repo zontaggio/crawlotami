@@ -1,4 +1,5 @@
 import { log, logError, timestamp } from './log.js';
+import { messages } from './messages.js';
 import { CaptchaError, SERVICES_URL } from './prenotami/session.js';
 import type { Notify } from './telegram.js';
 
@@ -54,12 +55,11 @@ export async function runMonitor(
 
       // Alert when slots open and when they're gone, not on every check in between.
       if (available && !slotsOpen) {
-        const message = `SLOT AVAILABLE! Book NOW: ${SERVICES_URL}`;
-        log(message);
-        await notify(message);
+        log(`Slots available! Book now: ${SERVICES_URL}`);
+        await notify(messages.slotsOpen(SERVICES_URL));
       } else if (!available && slotsOpen) {
         log('Slots are gone again.');
-        await notify('The open slots are gone again. Still watching.');
+        await notify(messages.slotsGone());
       } else {
         log(`Check #${checkCount} - ${available ? 'Slots still open.' : 'No slots available.'}`);
       }
@@ -68,8 +68,7 @@ export async function runMonitor(
       consecutiveErrors = 0;
 
       if (checkCount % options.heartbeatEvery === 0) {
-        const status = slotsOpen ? 'Slots are open right now!' : 'No slots so far.';
-        await notify(`Heartbeat: ${checkCount} checks completed. ${status} (${timestamp()})`);
+        await notify(messages.heartbeat(checkCount, slotsOpen, timestamp()));
       }
     } catch (error) {
       consecutiveErrors++;
@@ -77,9 +76,7 @@ export async function runMonitor(
       if (error instanceof CaptchaError) {
         const minutes = Math.round(options.captchaPauseMs / 60_000);
         logError(`CAPTCHA detected! Waiting ${minutes} min before retrying...`);
-        await notify(
-          `CAPTCHA detected! Paused for ${minutes} min. If it keeps happening, check less often or run with HEADLESS=false to solve it yourself.`,
-        );
+        await notify(messages.captcha(minutes));
         loggedIn = false;
         await checker.reset();
         await sleep(options.captchaPauseMs);
@@ -91,7 +88,7 @@ export async function runMonitor(
 
       if (consecutiveErrors >= options.maxConsecutiveErrors) {
         log(`Re-authenticating after ${consecutiveErrors} errors...`);
-        await notify(`Re-authenticating after ${consecutiveErrors} consecutive errors.`);
+        await notify(messages.reauthenticating(consecutiveErrors));
         loggedIn = false;
         consecutiveErrors = 0;
         await checker.reset();

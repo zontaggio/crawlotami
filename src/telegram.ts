@@ -3,7 +3,7 @@ import { logError } from './log.js';
 export type Notify = (message: string) => Promise<void>;
 
 /**
- * Sends messages to one Telegram chat through the Bot API. Failures are logged,
+ * Sends HTML-formatted messages (see `messages.ts`) to one Telegram chat through the Bot API. Failures are logged,
  * never thrown: a Telegram hiccup shouldn't stop the monitor.
  */
 export function createTelegramNotifier(botToken: string, chatId: string, fetchImpl: typeof fetch = fetch): Notify {
@@ -14,7 +14,7 @@ export function createTelegramNotifier(botToken: string, chatId: string, fetchIm
       const response = await fetchImpl(url, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: message }),
+        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML', disable_web_page_preview: true }),
         signal: AbortSignal.timeout(15_000),
       });
       if (!response.ok) {

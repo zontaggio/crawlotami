@@ -59,20 +59,20 @@ describe('runMonitor', () => {
 
   it('alerts once when slots open, then once when they are gone', async () => {
     const { messages } = await run([false, true, true, false]);
-    expect(messages.filter((m) => m.includes('SLOT AVAILABLE'))).toHaveLength(1);
+    expect(messages.filter((m) => m.includes('Slots available'))).toHaveLength(1);
     expect(messages.filter((m) => m.includes('gone again'))).toHaveLength(1);
   });
 
   it('sends a heartbeat every few checks', async () => {
     const { messages } = await run([false, false, false]);
-    expect(messages.filter((m) => m.startsWith('Heartbeat'))).toHaveLength(1);
+    expect(messages.filter((m) => m.includes('Still running'))).toHaveLength(1);
   });
 
   it('logs in again after repeated errors', async () => {
     const { checker, messages } = await run([new Error('timeout'), new Error('timeout'), new Error('timeout'), false]);
     expect(checker.resets).toBe(1);
     expect(checker.logins).toBe(2);
-    expect(messages).toContain('Re-authenticating after 3 consecutive errors.');
+    expect(messages).toContain('🔁 Logging in again after 3 errors in a row.');
   });
 
   it('backs off for the CAPTCHA pause instead of retrying', async () => {

@@ -16,7 +16,8 @@
     "postinstall": "playwright install chromium",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "notify:test": "node dist/index.js --test-notification"
   },
   "dependencies": {
     "playwright": "^1.50.0",
