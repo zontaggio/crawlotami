@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="public/crawlotami.png" alt="crawlotami" width="600" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.png">
+    <img src="docs/assets/logo-light.png" alt="crawlotami" width="360">
+  </picture>
 </p>
 
 # crawlotami
